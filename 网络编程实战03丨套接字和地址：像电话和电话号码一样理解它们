@@ -1,0 +1,61 @@
+首先socket到底是什么
+socket根据名字语义来看是插口和插槽的意思，意为通过插槽进行通信
+socket就是一个网络通信工具,是网络传输数据的唯一工具
+一个直观的解释就像标题说的那样 像电话和电话号码一样理解他们
+socket就像是电话，而Ip地址就像电话号码,而服务器的bind就像是向运营商将电话号码和电话进行绑定，然后通过listen函数等待客户端调用connect去连接服务器的过程就像是拨打对方的号码
+,而服务器端拿起电话接通就是accept过程,对方说话就是一个write过程本方接收到对方收的话就是recv过程
+,本方回复消息就是用write,对方通过recv接受
+然后讲解了三个地址结构
+1. 通用地址结构
+  /* POSIX.1g 规范规定了地址族为 2 字节的值.  */
+typedef unsigned short int sa_family_t;
+/* 描述通用套接字地址  */
+struct sockaddr{
+    sa_family_t sa_family;  /* 地址族.  16-bit*/
+    char sa_data[14];   /* 具体的地址值 112-bit */
+  }; 
+
+2. ipv4地址结构
+/* IPV4 套接字地址，32bit 值.  */
+typedef uint32_t in_addr_t;
+struct in_addr
+  {
+    in_addr_t s_addr;
+  };
+  
+/* 描述 IPV4 的套接字地址格式  */
+struct sockaddr_in
+  {
+    sa_family_t sin_family; /* 16-bit */
+    in_port_t sin_port;     /* 端口口  16-bit*/
+    struct in_addr sin_addr;    /* Internet address. 32-bit */
+
+
+    /* 这里仅仅用作占位符，不做实际用处  */
+    unsigned char sin_zero[8];
+  };
+
+3. 由于ipv4 2的32次方 只能满足40多亿的设备，在设备的扩张情况下产生了2的128次方的ipv6地址结构
+struct sockaddr_in6
+  {
+    sa_family_t sin6_family; /* 16-bit */
+    in_port_t sin6_port;  /* 传输端口号 # 16-bit */
+    uint32_t sin6_flowinfo; /* IPv6 流控信息 32-bit*/
+    struct in6_addr sin6_addr;  /* IPv6 地址 128-bit */
+    uint32_t sin6_scope_id; /* IPv6 域 ID 32-bit */
+  };
+3种地址结构都有最基础的两个字段
+1. sa_family_t sin_family 16bit地址簇用来决定后面的Ip地址以何种方式存储和解释他到底是本地地址还是ipv4地址或是Ipv6地址
+地址簇又分为
+AF_LOCAL  本地地址,这种情况一下一般用于本地进程间通信,很多情况下也可以写成AF_UNIX AF_FILE
+AF_INET ipv4
+AF_INET6 ipv6地址
+2. ip地址
+
+总结: 
+  unix比较简单所有一切都是文件,所以套接字也是文件，所以分以下两种套接字文件
+  1. 本地套接字文件
+     一般用于进程间通信,只是在本地进行通信，所以并不需要ip地址和端口
+  2. 网络套接字文件
+    一般用于网络通信所以需要ip地址进行定位主机再通过端口确定对应主机的应用程序
+ 
