@@ -1,0 +1,102 @@
+    1 #include"../head.h"
+    2 
+    3 static int count;
+    4 
+>>  5 static void sig_int( int signo ) {
+    6     printf( "\nreceived %d datagrams\n", count );
+    7     exit( 0 );
+    8 }
+    9 
+>> 10 static void sig_pipe( int signo ) {
+   11     printf( "\n received sig_pipe\n" );
+   12     exit( 0 );
+   13 }
+   14 
+   15 int
+>> 16 main( int argc, char* argv[] ) {
+   17     int listenfd;
+   18     listenfd = socket( AF_INET, SOCK_STREAM, 0 );
+   19     struct sockaddr_in server_addr;
+   20     bzero( &server_addr, sizeof( server_addr ) );
+   21     server_addr.sin_family = AF_INET;
+   22     server_addr.sin_addr.s_addr = htonl( INADDR_ANY );
+   23     server_addr.sin_port = htons( SEVR_PORT );
+   24 
+   25     int rt1 = bind( listenfd, ( struct sockaddr* )& server_addr, sizeof( server_addr ) );
+   26     if ( rt1 < 0 ) {
+   27         error( 1, errno, "bind failed" );
+   28     }
+   29 
+   30     int rt2 = listen( listenfd, LISTENNQ );
+   31     if ( rt2 < 0 ) {
+   32         error( 1, errno, "error listen" );
+    1 #include"../head.h" 
+    2 
+    3 static int count;
+    4 
+>>  5 static void sig_int( int signo ) {
+    6     printf( "\nreceived %d datagrams\n", count );
+    7     exit( 0 );
+    8 }
+    9 
+>> 10 static void sig_pipe( int signo ) {
+   11     printf( "\n received sig_pipe\n" );
+   12     exit( 0 );
+   13 }
+   14 
+   15 int
+>> 16 main( int argc, char* argv[] ) {
+   17     int listenfd;
+   18     listenfd = socket( AF_INET, SOCK_STREAM, 0 );
+   19     struct sockaddr_in server_addr;
+   20     bzero( &server_addr, sizeof( server_addr ) );
+   21     server_addr.sin_family = AF_INET;
+   22     server_addr.sin_addr.s_addr = htonl( INADDR_ANY );
+   23     server_addr.sin_port = htons( SEVR_PORT );
+   24 
+   25     int rt1 = bind( listenfd, ( struct sockaddr* )& server_addr, sizeof( server_addr ) );
+   26     if ( rt1 < 0 ) {
+   27         error( 1, errno, "bind failed" );
+   28     }
+   29 
+   30     int rt2 = listen( listenfd, LISTENNQ );
+   31     if ( rt2 < 0 ) {
+   32         error( 1, errno, "error listen" );
+   33     }
+   34 
+   35     signal( SIGINT, sig_int );
+   36     signal( SIGPIPE, sig_pipe );
+   37 
+   38     int connfd;
+   39     struct sockaddr_in cli_addr;
+   40     socklen_t cli_len = sizeof( cli_addr );
+   41     connfd = accept( listenfd, ( struct sockaddr* )& cli_addr, &cli_len );
+   42     if ( connfd < 0 ) {
+   43         error( 1, errno, "accept error" );
+   44     }
+   45 
+   46     char message[MAXLINE];
+   47     count = 0;
+   48     for ( ; ; ) {
+   49         int n = read( connfd, message, MAXLINE );
+   50         if ( n < 0 ) {
+   51             error( 1, errno, "error read" );
+   52         } else if ( n == 0 ) {
+   53             error( 1, 0, "client closed\n" );
+   54         }
+   55         message[n] = 0;
+   56         printf( "received %d bytes: %s\n", n, message );
+   57         count++;
+   58         char send_line[MAXLINE];
+   59         sprintf( send_line, "Hi, %s", message );
+   60         sleep( 5 );
+   61 
+   62         int write_nc = send( connfd, send_line, strlen( send_line ), 0 );
+   63         printf( "send bytes:%u \n", write_nc );
+   64         if ( write_nc < 0 ) {
+   65             error( 1, errno, "error write" );
+   66         }
+   67     }
+   68 
+   69     exit( 0 );
+   70 }
