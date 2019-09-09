@@ -1,5 +1,5 @@
   #include"../head.h"
-  tcp并不是总是可靠的,只有通过recv或者send函数去检测
+  tcp并不是总是可靠的,只有通过recv或者send函数去检测连接是否关闭
   int
   main( int argc, char* argv[] ) {
       if ( argc != 2 ) {
